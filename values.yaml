@@ -1,44 +1,32 @@
-# Default values for mychart.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
+## If you want more than 1 replica you will have to use a ReadWriteMany volume
 replicaCount: 1
 
 image:
-  repository: nginx
+  repository: pypiserver/pypiserver
+  tag: v1.3.2
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  pullSecrets: []
 
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
+pypiserver:
+  # for a list of options see: https://github.com/pypiserver/pypiserver
+  extraArgs: []
+    # - --disable-fallback
+    # - --log-conf=/path/to/file
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
+auth:
+  ## comma-separated list of (case-insensitive) actions to authenticate
+  ## Use '.' or '' for empty. Requires to have set the password (option below).
+  ## Available actions are update, download and list
+  actions: update
+  ## Map of username / encoded passwords that will be put to the htpasswd file
+  ## use `htpasswd -n -b username password` to generate them
+  credentials: {}
+  ## Name of externally provided secret with credentials
+  existingSecret: ""
 
 podAnnotations: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
-service:
-  type: ClusterIP
-  port: 80
+podLabels: {}
 
 ingress:
   enabled: false
@@ -47,7 +35,7 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: chart-example.local
+    - host: pypinocgp.ghgsat.science
       paths:
         - path: /
           pathType: ImplementationSpecific
@@ -55,6 +43,62 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
+
+# ingress:
+#   enabled: false
+#   ingressClassName:
+#   labels: {}
+#   annotations: {}
+#   # hosts:
+#   #   - pypiserver.org
+#   # kubernetes.io/ingress.class: nginx
+#   # kubernetes.io/tls-acme: "true"
+#   # path: "/pypiserver"
+#   pathType: ImplementationSpecific
+#   tls: []
+#   # - secretName: pypiserver.cluster.local
+#   #   hosts:
+#   #     - pypiserver.cluster.local
+
+service:
+  type: ClusterIP
+  port: 8080
+  annotations: {}
+  labels: {}
+  clusterIP: ""
+  ## List of IP addresses at which the pypiserver service is available
+  ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
+  externalIPs: []
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  # nodePort: 30000
+
+persistence:
+  enabled: false
+  ## PyPi server packages Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  # storageClass: "-"
+  ##
+  ## If you want to reuse an existing claim, you can pass the name of the PVC
+  ## using the existingClaim variable
+  # existingClaim: your-claim
+  ##
+  ## The Access mode should be ReadWriteMany if you decide to scale up to more
+  ## than one replica
+  accessMode: ReadWriteOnce
+  size: 5Gi
+  mountPropagation: None
+
+securityContext:
+  enabled: true
+  runAsUser: 0
+  runAsGroup: 0
+  fsGroup: 1000
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -67,13 +111,6 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
 
 nodeSelector: {}
 
