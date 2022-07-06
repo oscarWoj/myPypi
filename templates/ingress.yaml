@@ -39,12 +39,12 @@ spec:
             backend:
               {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
               service:
-                name: {{ $fullName }}
+                name: {{ template "pypiserver.fullname" . }}
                 port:
-                  number: {{ $svcPort }}
+                  number: 80
               {{- else }}
-              serviceName: {{ $fullName }}
-              servicePort: {{ $svcPort }}
+              serviceName: {{ template "pypiserver.fullname" . }}
+              servicePort: 80
               {{- end }}
           {{- end }}
     {{- end }}
