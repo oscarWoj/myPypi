@@ -1,17 +1,7 @@
-{{- if .Values.ingress.enabled -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: pypi-nocgp-pypiserver
-  labels:
-    app.kubernetes.io/name: {{ template "pypiserver.name" . }}
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-{{- with .Values.ingress.annotations }}
-  annotations:
-{{ toYaml . | indent 4 }}
-{{- end }}
 spec:
   defaultBackend:
     service: 
@@ -19,4 +9,3 @@ spec:
       port:
         number: 8080
   ingressClassName: pypi-nocgp-pypiserver
-{{- end }}
